@@ -1,6 +1,6 @@
-let ID_COUNTER = 1
+let PLAYER_ID_COUNTER = 1
+let MATCH_ID_COUNTER = 1
 
-let player_list = []
 let player_q_list = []
 
 let ongoing_matches = []
@@ -36,7 +36,7 @@ const p_prefixes = [
     "Sausage",
     "Rice",
     "Lobster",
-    "Corn", 
+    "Corn",
     "Sauce",
     "Pasta",
     "Spaghetti",
@@ -111,24 +111,54 @@ class Player{
 }
 
 class Match{
-    constructor(player_a, player_b){
+    constructor(player_a, player_b, id){
         this.player_a = player_a;
         this.player_b = player_b;
+        this.id = id;
+        this.rating = (player_a.rating + player_b.rating) / 2;
         this.winner = 0;
     }
 
     simulate_game = function(){
-        this.winner = this.player_a.real_skill > this.player_b.real_skill ? 1 : 2;
-        CalculateNewRating(this.player_a, this.player_b, this.winner);        
-        return true;
+        // True if player_a wins
+        this.winner = this.player_a.real_skill > this.player_b.real_skill ? true : false;
+        UpdateWinsLosses(this.player_a, this.player_b, this.winner);
+        CalculateNewRating(this.player_a, this.player_b, this.winner);
+        this.player_a.ingame = false;
+        this.player_b.ingame = false;
+        return [this.player_a, this.player_b];
     }
 
 }
 
 function MakeMatch(){
-    for (let index = 0; index < player_q_list.length; index++) {
-        const element = player_q_list[index];
-        
+    let epsilon = 100
+    if (player_q_list.length >= 2){
+        for (let i = 0; i < player_q_list.length; i++) {
+            let player_a = player_q_list[i];
+            if (!player_a.ingame) {
+                for (let j = 0; j < player_q_list.length; j++) {
+                    if (player_a !== player_q_list[j] && !player_q_list[j].ingame) {
+                        if (Math.abs(player_a.rating - player_q_list[j].rating) < epsilon) {
+                            ongoing_matches.push(new Match(player_a, player_q_list[j], MATCH_ID_COUNTER++));
+                            player_a.ingame = true;
+                            player_q_list[j].ingame = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function UpdateWinsLosses(player_a, player_b, winner){
+    if(!!winner){
+        player_a.wins++;
+        player_b.losses++;
+    }else{
+        player_a.losses++;
+        player_b.wins++;
     }
 }
 
@@ -141,57 +171,94 @@ function CalculateNewRating(player_a, player_b, winner){
 
     let k = 35;
     let rating_change = parseInt(k * (!!winner - expected), 10);
-    
+
     player_a.rating = a_prev + rating_change;
-    player_b.rating = b_preb + rating_change * -1;
+    player_b.rating = b_prev + rating_change * -1;
 }
 
 function CreateNewPlayer(name, real_skill, starting_rating, wins, losses, id){
     let p = new Player(name, real_skill, starting_rating, wins, losses, id);
     console.log("New player: ", p);
-    player_list.push(p);
+    player_q_list.push(p);
 }
 
 function CreateRandomName(){
     return p_prefixes[Math.floor(Math.random() * p_prefixes.length)].toString() +
     p_postfixes[Math.floor(Math.random() * p_postfixes.length)].toString() +
-    Math.floor(Math.random() * 99).toString(); 
+    Math.floor(Math.random() * 99).toString();
 }
 
-setInterval(function(){
-    CreateNewPlayer(CreateRandomName(), randomG(3), 1000, 0, 0, ID_COUNTER++);
+/*setInterval(function(){
+    if(player_q_list.length < 30){
+        CreateNewPlayer(CreateRandomName(), randomG(3), 1000, 0, 0, PLAYER_ID_COUNTER++);
+    } else{
+        console.log("Max amount of players reached, no longer creating players");
+    }
 }, 1000);
+*/
 
+for (let index = 0; index < 30; index++) {
+    CreateNewPlayer(CreateRandomName(), randomG(3), 1000, 0, 0, PLAYER_ID_COUNTER++);
+}
+
+/// Update the player-list table
 setInterval(function(){
     var tbody = document.getElementById('player-table');
     tbody.innerHTML = "";
-    player_q_list = [];
 
-    for (let index = 0; index < player_list.length; index++) {
-        const element = player_list[index];
-        if(element.ingame = false){
-            player_q_list.push(element);
+    if (player_q_list.length >= 1){
+
+        for (var i = 0; i < player_q_list.length; i++) {
+            var tr = "<tr>";
+
+            tr += "<td>" + player_q_list[i].id.toString()
+            + "</td>" + "<td>" + player_q_list[i].name.toString()
+            + "</td>" + "<td>" + player_q_list[i].rating.toString()
+            + "</td>" + "<td>" + parseFloat(player_q_list[i].real_skill).toPrecision(3)
+            + "</td>" + "<td>" + player_q_list[i].wins.toString()
+            + "</td>" + "<td>" + player_q_list[i].losses.toString()
+            + "</td></tr>";
+            tbody.innerHTML += tr;
+            
         }
     }
 
-    for (var i = 0; i < player_q_list.length; i++) {
+}, 16);
+
+/// Update the matches-list table
+setInterval(function(){
+    var tbody = document.getElementById('matches-table');
+    tbody.innerHTML = "";
+
+    for (var i = 0; i < ongoing_matches.length; i++) {
         var tr = "<tr>";
-       
-        tr += "<td>" + player_q_list[i].id.toString() 
-        + "</td>" + "<td>" + player_q_list[i].name.toString()
-        + "</td>" + "<td>" + player_q_list[i].rating.toString()
-        + "</td>" + "<td>" + parseFloat(player_q_list[i].real_skill).toPrecision(3)
-        + "</td>" + "<td>" + player_q_list[i].wins.toString()
-        + "</td>" + "<td>" + player_q_list[i].losses.toString()
+
+        tr += "<td>" + ongoing_matches[i].id.toString()
+        + "</td>" + "<td>" + ongoing_matches[i].player_a.name.toString()
+        + "</td>" + "<td>" + ongoing_matches[i].player_b.name.toString()
+        + "</td>" + "<td>" + ongoing_matches[i].rating.toString();
         + "</td></tr>";
         tbody.innerHTML += tr;
     }
 
-}, 1000);
+}, 16);
+
+setInterval(function(){
+    MakeMatch();
+}, 2000);
+
+setInterval(function(){
+    if(ongoing_matches.length >= 1){
+        for (let index = 0; index < ongoing_matches.length; index++) {
+            ongoing_matches[index].simulate_game();
+            ongoing_matches.splice(index, 1);
+        }
+    }
+}, 1549);
 
 // v is the number of times random is summed and should be over >= 1
 // return a random number between 0-1 exclusive
-function randomG(v){ 
+function randomG(v){
     var r = 0;
     for(var i = v; i > 0; i --){
         r += Math.random();
