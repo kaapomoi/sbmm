@@ -37,12 +37,35 @@
 
 
   <div id="beginscreen" class="container-fluid p-0">
-    <section class="resume-section p-3 p-lg-5 d-flex align-items-center" id="players">
-      <div class="w-100">
-        <div class="container-fluid" id="player-container">
+    <section class="p-3 p-lg-5 d-flex align-items-center" id="players">
+      <table class="col table table-striped table-dark table-sm w-50">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Rating</th>
+            <th scope="col">Skill</th>
+            <th scope="col">Wins</th>
+            <th scope="col">Losses</th>
+          </tr>
+        </thead>
+        <tbody id="player-table">
           
-        </div>
-      </div>
+        </tbody>
+      </table>
+      <table class="col table table-striped table-dark table-sm w-50">
+        <thead>
+          <tr>
+            <th scope="col">Game ID</th>
+            <th scope="col">Player 1</th>
+            <th scope="col">Player 2</th>
+            <th scope="col">Rating</th>
+          </tr>
+        </thead>
+        <tbody id="player-table">
+          
+        </tbody>
+      </table>
     </section>
 
     <hr class="m-0">
