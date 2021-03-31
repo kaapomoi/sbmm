@@ -10,15 +10,5 @@ The user should also see a certain players match history.
 The user should also see the distribution of players on the ladder.
 
 ## todo:
- - Create players
- - Create lobby
- - Create simple 1v1 matchmaking
+ - Improve the actual mm algo
  - Create UI
-
-
-
-##### player class
-
-
-
-
